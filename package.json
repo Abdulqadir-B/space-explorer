@@ -4,7 +4,6 @@
   "description": "NASA Space Explorer Website",
   "main": "index.html",
   "scripts": {
-    "dev": "vercel dev",
     "deploy": "vercel --prod"
   },
   "keywords": ["nasa", "space", "astronomy"],
