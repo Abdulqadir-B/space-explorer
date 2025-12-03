@@ -402,7 +402,7 @@ main {
 
 /* Glowing separator line between sections */
 .content-section::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -40px;
   left: 0;
@@ -746,108 +746,6 @@ main {
   overflow: hidden;
 }
 
-/* ===== MARS ROVERS SECTION ===== */
-.mars-controls {
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
-.mars-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-  margin-top: 30px;
-}
-
-.mars-photo {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-}
-
-.mars-photo:hover {
-  transform: scale(1.05);
-}
-
-.mars-photo img {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-  display: block;
-}
-
-.mars-photo-info {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
-  padding: 15px;
-  color: white;
-}
-
-.mars-photo-camera {
-  font-size: 12px;
-  color: #64b5f6;
-  font-weight: bold;
-}
-
-.mars-photo-date {
-  font-size: 11px;
-  color: #90a4ae;
-}
-
-/* Single Mars Photo Display */
-.mars-single-photo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  max-width: 800px;
-  margin: 30px auto;
-}
-
-.mars-single-photo img {
-  width: 100%;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  cursor: pointer;
-  transition: transform 0.3s ease;
-}
-
-.mars-single-photo img:hover {
-  transform: scale(1.02);
-}
-
-.mars-photo-details {
-  background: rgba(30, 35, 60, 0.6);
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid rgba(100, 181, 246, 0.3);
-  width: 100%;
-}
-
-.mars-photo-details h3 {
-  color: #64b5f6;
-  margin-bottom: 15px;
-  font-size: 24px;
-}
-
-.mars-photo-details p {
-  color: #e0e0e0;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.mars-hint {
-  color: #90a4ae !important;
-  font-style: italic;
-  margin-top: 10px !important;
-}
-
 /* ===== MISSIONS SECTION ===== */
 .missions-container {
   display: grid;
@@ -911,10 +809,11 @@ main {
 
 /* Show More Button */
 .show-more-btn {
-  width: 140px;
-  margin: 30px 20px 0 0;
+  grid-column: 1 / -1;
+  width: fit-content;
+  margin: 30px auto 0;
   display: block;
-  padding: 10px 20px;
+  padding: 12px 24px;
   background: rgba(100, 181, 246, 0.1);
   border: 2px solid #64b5f6;
   border-radius: 25px;
@@ -925,7 +824,6 @@ main {
   transition: all 0.3s ease;
   white-space: nowrap;
   text-align: center;
-  margin-left: auto;
 }
 
 .show-more-btn:hover {
@@ -1147,7 +1045,6 @@ main {
   }
 
   .search-grid,
-  .mars-grid,
   .missions-container {
     grid-template-columns: 1fr;
   }
@@ -1162,16 +1059,6 @@ main {
   }
 
   .search-box button {
-    width: 100%;
-  }
-
-  .mars-controls {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .mars-controls select,
-  .mars-controls button {
     width: 100%;
   }
 
@@ -1196,6 +1083,28 @@ main {
 
   .suggestion-tag i {
     font-size: 14px;
+  }
+
+  /* Space ambient section mobile adjustments */
+  .space-ambient-section {
+    margin: 30px 0;
+    padding: 40px 20px;
+  }
+
+  .fact-card {
+    padding: 25px 20px;
+  }
+
+  .fact-icon {
+    font-size: 32px;
+  }
+
+  .fact-card h4 {
+    font-size: 20px;
+  }
+
+  .fact-card p {
+    font-size: 15px;
   }
 
   .coming-soon-icon {
@@ -1306,6 +1215,253 @@ main {
 .suggestion-tag:active {
   transform: translateY(-1px) scale(1.02);
   box-shadow: 0 3px 12px rgba(100, 181, 246, 0.3);
+}
+
+/* ===== SPACE AMBIENT SECTION ===== */
+.space-ambient-section {
+  position: relative;
+  margin: 50px 0;
+  padding: 60px 40px;
+  background: rgba(15, 20, 35, 0.6);
+  border-radius: 20px;
+  border: 1px solid rgba(100, 181, 246, 0.15);
+  overflow: hidden;
+  transition: all 0.5s ease;
+  backdrop-filter: blur(10px);
+}
+
+.space-ambient-section.hidden {
+  opacity: 0;
+  transform: translateY(-30px);
+  pointer-events: none;
+  margin: 0;
+  padding: 0;
+  max-height: 0;
+}
+
+/* ===== FLOATING PARTICLES ANIMATION ===== */
+.floating-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  background: radial-gradient(
+    circle,
+    rgba(100, 181, 246, 0.8) 0%,
+    rgba(100, 181, 246, 0.2) 50%,
+    transparent 100%
+  );
+  border-radius: 50%;
+  animation: floatUp linear infinite;
+}
+
+.particle:nth-child(1) {
+  width: 4px;
+  height: 4px;
+  left: 10%;
+  animation-duration: 8s;
+  animation-delay: 0s;
+}
+
+.particle:nth-child(2) {
+  width: 6px;
+  height: 6px;
+  left: 25%;
+  animation-duration: 12s;
+  animation-delay: 2s;
+}
+
+.particle:nth-child(3) {
+  width: 3px;
+  height: 3px;
+  left: 40%;
+  animation-duration: 10s;
+  animation-delay: 4s;
+}
+
+.particle:nth-child(4) {
+  width: 5px;
+  height: 5px;
+  left: 55%;
+  animation-duration: 15s;
+  animation-delay: 1s;
+}
+
+.particle:nth-child(5) {
+  width: 4px;
+  height: 4px;
+  left: 70%;
+  animation-duration: 9s;
+  animation-delay: 3s;
+}
+
+.particle:nth-child(6) {
+  width: 7px;
+  height: 7px;
+  left: 85%;
+  animation-duration: 11s;
+  animation-delay: 5s;
+}
+
+.particle:nth-child(7) {
+  width: 3px;
+  height: 3px;
+  left: 15%;
+  animation-duration: 14s;
+  animation-delay: 6s;
+}
+
+.particle:nth-child(8) {
+  width: 5px;
+  height: 5px;
+  left: 75%;
+  animation-duration: 13s;
+  animation-delay: 2.5s;
+}
+
+@keyframes floatUp {
+  0% {
+    bottom: -10px;
+    opacity: 0;
+    transform: translateX(0) rotate(0deg);
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    bottom: 100%;
+    opacity: 0;
+    transform: translateX(30px) rotate(360deg);
+  }
+}
+
+/* ===== SPACE FACTS CAROUSEL ===== */
+.space-facts-carousel {
+  position: relative;
+  height: 200px;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fact-card {
+  position: absolute;
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+  opacity: 0;
+  transform: translateX(100px) scale(0.9);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(100, 181, 246, 0.05);
+  border: 1px solid rgba(100, 181, 246, 0.2);
+  border-radius: 16px;
+  padding: 30px;
+  backdrop-filter: blur(5px);
+}
+
+.fact-card.active {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.fact-card.prev {
+  transform: translateX(-100px) scale(0.9);
+}
+
+.fact-icon {
+  font-size: 40px;
+  color: #64b5f6;
+  margin-bottom: 15px;
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 10px rgba(100, 181, 246, 0.5));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(100, 181, 246, 0.8));
+    transform: scale(1.1);
+  }
+}
+
+.fact-card h4 {
+  font-size: 22px;
+  color: #64b5f6;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.fact-card p {
+  font-size: 16px;
+  color: #e0e0e0;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ===== CAROUSEL NAVIGATION DOTS ===== */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(100, 181, 246, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.dot:hover {
+  background: rgba(100, 181, 246, 0.6);
+  transform: scale(1.2);
+}
+
+.dot.active {
+  background: #64b5f6;
+  box-shadow: 0 0 15px rgba(100, 181, 246, 0.6);
+}
+
+.dot.active::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(100, 181, 246, 0.3);
+  border-radius: 50%;
+  animation: dotRipple 2s ease-out infinite;
+}
+
+@keyframes dotRipple {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
 }
 
 /* ===== COMING SOON SECTION ===== */

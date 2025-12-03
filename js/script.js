@@ -7,7 +7,7 @@ class RateLimiter {
   constructor() {
     // Generate browser fingerprint
     this.fingerprint = this.generateFingerprint();
-    
+
     // Per-endpoint rate limits (requests per hour)
     this.limits = {
       apod: { max: 10, interval: 3600000 }, // 10 per hour
@@ -26,19 +26,19 @@ class RateLimiter {
     this.blockedUntil = parseInt(
       localStorage.getItem("rateLimitBlockedUntil") || "0"
     );
-    
+
     // Cross-check with sessionStorage
     this.validateStorage();
   }
 
   // Generate browser fingerprint to track users more reliably
   generateFingerprint() {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.textBaseline = 'top';
-    ctx.font = '14px Arial';
-    ctx.fillText('Browser fingerprint', 2, 2);
-    
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    ctx.textBaseline = "top";
+    ctx.font = "14px Arial";
+    ctx.fillText("Browser fingerprint", 2, 2);
+
     const fingerprint = {
       canvas: canvas.toDataURL(),
       screen: `${screen.width}x${screen.height}x${screen.colorDepth}`,
@@ -48,39 +48,39 @@ class RateLimiter {
       userAgent: navigator.userAgent,
       hardwareConcurrency: navigator.hardwareConcurrency || 0,
       deviceMemory: navigator.deviceMemory || 0,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
-    
+
     // Create hash from fingerprint
     const hash = btoa(JSON.stringify(fingerprint)).substring(0, 32);
-    
+
     // Store in both localStorage and sessionStorage
-    const stored = localStorage.getItem('browserFingerprint');
+    const stored = localStorage.getItem("browserFingerprint");
     if (!stored) {
-      localStorage.setItem('browserFingerprint', hash);
-      sessionStorage.setItem('browserFingerprint', hash);
+      localStorage.setItem("browserFingerprint", hash);
+      sessionStorage.setItem("browserFingerprint", hash);
     } else if (stored !== hash) {
       // Different fingerprint detected - possible bypass attempt
       this.applyPenalty();
     }
-    
+
     return hash;
   }
 
   // Validate data across storage mechanisms
   validateStorage() {
-    const localData = localStorage.getItem('rateLimitBuckets');
-    const sessionData = sessionStorage.getItem('rateLimitBuckets');
-    
+    const localData = localStorage.getItem("rateLimitBuckets");
+    const sessionData = sessionStorage.getItem("rateLimitBuckets");
+
     if (localData && !sessionData) {
       // Data exists in localStorage but not sessionStorage - sync it
-      sessionStorage.setItem('rateLimitBuckets', localData);
+      sessionStorage.setItem("rateLimitBuckets", localData);
     } else if (sessionData && localData !== sessionData) {
       // Mismatch - possible tampering, use the more restrictive values
-      const localBuckets = JSON.parse(localData || '{}');
-      const sessionBuckets = JSON.parse(sessionData || '{}');
-      
-      Object.keys(localBuckets).forEach(key => {
+      const localBuckets = JSON.parse(localData || "{}");
+      const sessionBuckets = JSON.parse(sessionData || "{}");
+
+      Object.keys(localBuckets).forEach((key) => {
         if (sessionBuckets[key]) {
           // Use lower token count (more restrictive)
           localBuckets[key].tokens = Math.min(
@@ -89,27 +89,34 @@ class RateLimiter {
           );
         }
       });
-      
+
       const synced = JSON.stringify(localBuckets);
-      localStorage.setItem('rateLimitBuckets', synced);
-      sessionStorage.setItem('rateLimitBuckets', synced);
+      localStorage.setItem("rateLimitBuckets", synced);
+      sessionStorage.setItem("rateLimitBuckets", synced);
     }
   }
 
   // Apply penalty for suspicious behavior
   applyPenalty() {
     // Reduce all token counts by half
-    Object.keys(this.buckets).forEach(endpoint => {
-      this.buckets[endpoint].tokens = Math.floor(this.buckets[endpoint].tokens / 2);
+    Object.keys(this.buckets).forEach((endpoint) => {
+      this.buckets[endpoint].tokens = Math.floor(
+        this.buckets[endpoint].tokens / 2
+      );
     });
-    
+
     // Apply 5-minute block
     this.blockedUntil = Date.now() + 300000;
-    localStorage.setItem('rateLimitBlockedUntil', this.blockedUntil.toString());
-    sessionStorage.setItem('rateLimitBlockedUntil', this.blockedUntil.toString());
-    
+    localStorage.setItem("rateLimitBlockedUntil", this.blockedUntil.toString());
+    sessionStorage.setItem(
+      "rateLimitBlockedUntil",
+      this.blockedUntil.toString()
+    );
+
     this.saveBuckets();
-    this.showRateLimitWarning('Suspicious activity detected. Temporary restriction applied.');
+    this.showRateLimitWarning(
+      "Suspicious activity detected. Temporary restriction applied."
+    );
   }
 
   loadBuckets() {
@@ -175,10 +182,14 @@ class RateLimiter {
 
   canMakeRequest(endpoint) {
     // Check if temporarily blocked
-    const localBlock = parseInt(localStorage.getItem("rateLimitBlockedUntil") || "0");
-    const sessionBlock = parseInt(sessionStorage.getItem("rateLimitBlockedUntil") || "0");
+    const localBlock = parseInt(
+      localStorage.getItem("rateLimitBlockedUntil") || "0"
+    );
+    const sessionBlock = parseInt(
+      sessionStorage.getItem("rateLimitBlockedUntil") || "0"
+    );
     const maxBlock = Math.max(localBlock, sessionBlock);
-    
+
     if (Date.now() < maxBlock) {
       const waitTime = Math.ceil((maxBlock - Date.now()) / 1000);
       return { allowed: false, reason: "blocked", waitTime };
@@ -260,9 +271,9 @@ class RateLimiter {
         this.blockedUntil.toString()
       );
       this.showRateLimitWarning(
-        "⚠️ You're making requests too quickly! Blocked for 5 minutes. Please refresh responsibly."
+        "🚀 Whoa there, space explorer! You're browsing at light speed. Let's take a quick break to let the cosmos catch up. Come back in a few minutes for more stellar discoveries!"
       );
-      
+
       // Disable all buttons temporarily
       this.disableUI(300000);
       return false;
@@ -279,7 +290,7 @@ class RateLimiter {
     let message = "";
 
     if (info.reason === "blocked") {
-      message = `Too many requests! Please wait ${info.waitTime} seconds before trying again.`;
+      message = `🌟 Taking a breather from space exploration! Please wait ${Math.ceil(info.waitTime)} more seconds, then continue your cosmic journey.`;
     } else if (info.reason === "endpoint_limit") {
       message = `You've reached the limit for ${info.endpoint} requests. Resets in ${info.resetIn} minutes.`;
     } else if (info.reason === "global_limit") {
@@ -314,31 +325,31 @@ class RateLimiter {
 
   // Disable all interactive elements temporarily
   disableUI(duration) {
-    const buttons = document.querySelectorAll('button:not(.close-warning)');
-    const inputs = document.querySelectorAll('input, select');
-    
-    buttons.forEach(btn => {
+    const buttons = document.querySelectorAll("button:not(.close-warning)");
+    const inputs = document.querySelectorAll("input, select");
+
+    buttons.forEach((btn) => {
       btn.disabled = true;
-      btn.style.opacity = '0.5';
-      btn.style.cursor = 'not-allowed';
+      btn.style.opacity = "0.5";
+      btn.style.cursor = "not-allowed";
     });
-    
-    inputs.forEach(input => {
+
+    inputs.forEach((input) => {
       input.disabled = true;
-      input.style.opacity = '0.5';
+      input.style.opacity = "0.5";
     });
-    
+
     // Re-enable after duration
     setTimeout(() => {
-      buttons.forEach(btn => {
+      buttons.forEach((btn) => {
         btn.disabled = false;
-        btn.style.opacity = '';
-        btn.style.cursor = '';
+        btn.style.opacity = "";
+        btn.style.cursor = "";
       });
-      
-      inputs.forEach(input => {
+
+      inputs.forEach((input) => {
         input.disabled = false;
-        input.style.opacity = '';
+        input.style.opacity = "";
       });
     }, duration);
   }
@@ -346,7 +357,7 @@ class RateLimiter {
   updateDisplay() {
     const counterElement = document.getElementById("api-counter");
     if (!counterElement) return; // Counter removed from UI
-    
+
     const global = this.buckets.global;
     const remaining = Math.max(0, global.tokens);
     const total = this.limits.global.max;
@@ -482,6 +493,145 @@ navLinks.forEach((link) => {
   });
 });
 
+// ===== APOD CACHE MANAGEMENT =====
+class APODCache {
+  constructor() {
+    this.CACHE_KEY = 'nasa_apod_cache';
+    this.CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+  }
+
+  // Get cached APOD data if valid
+  getCachedAPOD(date) {
+    try {
+      const cached = localStorage.getItem(`${this.CACHE_KEY}_${date}`);
+      if (!cached) return null;
+
+      const cacheData = JSON.parse(cached);
+      const now = Date.now();
+      
+      // Check if cache is still valid
+      if (now - cacheData.timestamp < this.CACHE_DURATION) {
+        return cacheData.data;
+      } else {
+        // Cache expired, remove it
+        this.removeCachedAPOD(date);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error reading APOD cache:', error);
+      return null;
+    }
+  }
+
+  // Save APOD data to cache
+  saveToCache(date, data) {
+    try {
+      const cacheData = {
+        data: data,
+        timestamp: Date.now(),
+        date: date
+      };
+      
+      localStorage.setItem(`${this.CACHE_KEY}_${date}`, JSON.stringify(cacheData));
+      
+      // Clean up old cache entries (keep only last 7 days)
+      this.cleanupOldCache();
+    } catch (error) {
+      console.error('Error saving APOD to cache:', error);
+      // If localStorage is full, try to clear old entries
+      if (error.name === 'QuotaExceededError') {
+        this.cleanupOldCache(true);
+        // Try saving again after cleanup
+        try {
+          localStorage.setItem(`${this.CACHE_KEY}_${date}`, JSON.stringify(cacheData));
+        } catch (retryError) {
+          console.error('Failed to save APOD cache even after cleanup:', retryError);
+        }
+      }
+    }
+  }
+
+  // Remove specific cached APOD
+  removeCachedAPOD(date) {
+    try {
+      localStorage.removeItem(`${this.CACHE_KEY}_${date}`);
+    } catch (error) {
+      console.error('Error removing APOD cache:', error);
+    }
+  }
+
+  // Clean up old cache entries
+  cleanupOldCache(aggressive = false) {
+    try {
+      const keys = Object.keys(localStorage);
+      const apodCacheKeys = keys.filter(key => key.startsWith(this.CACHE_KEY));
+      
+      const now = Date.now();
+      const keepDuration = aggressive ? 3 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000; // 3 or 7 days
+      
+      apodCacheKeys.forEach(key => {
+        try {
+          const cached = localStorage.getItem(key);
+          if (cached) {
+            const cacheData = JSON.parse(cached);
+            if (now - cacheData.timestamp > keepDuration) {
+              localStorage.removeItem(key);
+            }
+          }
+        } catch (error) {
+          // If we can't parse the cached data, remove it
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (error) {
+      console.error('Error during cache cleanup:', error);
+    }
+  }
+
+  // Get cache statistics
+  getCacheStats() {
+    const keys = Object.keys(localStorage).filter(key => key.startsWith(this.CACHE_KEY));
+    const stats = {
+      totalEntries: keys.length,
+      entries: []
+    };
+
+    keys.forEach(key => {
+      try {
+        const cached = localStorage.getItem(key);
+        if (cached) {
+          const cacheData = JSON.parse(cached);
+          const age = Date.now() - cacheData.timestamp;
+          const isExpired = age > this.CACHE_DURATION;
+          
+          stats.entries.push({
+            date: cacheData.date,
+            age: Math.floor(age / (60 * 60 * 1000)), // age in hours
+            expired: isExpired
+          });
+        }
+      } catch (error) {
+        // Ignore parsing errors
+      }
+    });
+
+    return stats;
+  }
+
+  // Clear all APOD cache
+  clearAllCache() {
+    try {
+      const keys = Object.keys(localStorage).filter(key => key.startsWith(this.CACHE_KEY));
+      keys.forEach(key => localStorage.removeItem(key));
+    } catch (error) {
+      console.error('Error clearing APOD cache:', error);
+    }
+  }
+}
+
+// Initialize APOD cache
+const apodCache = new APODCache();
+
 // ===== APOD (Astronomy Picture of the Day) =====
 const apodContent = document.getElementById("apod-content");
 const apodLoading = document.getElementById("apod-loading");
@@ -494,6 +644,16 @@ async function fetchAPOD(date = today) {
   apodContent.innerHTML = "";
 
   try {
+    // First, check if we have valid cached data
+    const cachedData = apodCache.getCachedAPOD(date);
+    
+    if (cachedData) {
+      // Use cached data
+      displayAPOD(cachedData);
+      return;
+    }
+
+    // No valid cache, fetch from API
     const response = await makeRateLimitedRequest("apod", async () => {
       const data = await window.NASAServerless.fetchAPOD(date);
       return { ok: true, json: async () => data };
@@ -504,6 +664,10 @@ async function fetchAPOD(date = today) {
     }
 
     const data = await response.json();
+    
+    // Save to cache before displaying
+    apodCache.saveToCache(date, data);
+    
     displayAPOD(data);
   } catch (error) {
     // Error handled gracefully for user
@@ -523,7 +687,7 @@ function displayAPOD(data) {
   const mediaHTML =
     data.media_type === "video"
       ? `<iframe src="${data.url}" width="100%" height="100%" frameborder="0" allowfullscreen style="border-radius: 12px;"></iframe>`
-      : `<img src="${data.url}" alt="${data.title}" class="apod-image" onclick="openModal('${data.url}', '${data.title}')">`;
+      : `<img src="${data.url}" alt="${data.title}" class="apod-image">`;
 
   apodContent.innerHTML = `
         <div class="apod-image-wrapper">
@@ -574,17 +738,99 @@ let allSearchResults = [];
 let displayedResultsCount = 0;
 const RESULTS_PER_PAGE = 4;
 
+// ===== SPACE FACTS CAROUSEL =====
+class SpaceFactsCarousel {
+  constructor() {
+    this.currentSlide = 0;
+    this.slides = document.querySelectorAll('.fact-card');
+    this.dots = document.querySelectorAll('.carousel-dots .dot');
+    this.totalSlides = this.slides.length;
+    this.autoSlideInterval = null;
+    
+    if (this.slides.length > 0) {
+      this.init();
+    }
+  }
+
+  init() {
+    // Add click listeners to dots
+    this.dots.forEach((dot, index) => {
+      dot.addEventListener('click', () => {
+        this.goToSlide(index);
+        this.resetAutoSlide();
+      });
+    });
+
+    // Start auto-slide
+    this.startAutoSlide();
+
+    // Pause auto-slide on hover
+    const carousel = document.querySelector('.space-facts-carousel');
+    if (carousel) {
+      carousel.addEventListener('mouseenter', () => this.pauseAutoSlide());
+      carousel.addEventListener('mouseleave', () => this.startAutoSlide());
+    }
+  }
+
+  goToSlide(slideIndex) {
+    // Remove active classes
+    this.slides.forEach(slide => {
+      slide.classList.remove('active', 'prev');
+    });
+    this.dots.forEach(dot => dot.classList.remove('active'));
+
+    // Set previous slide
+    if (this.currentSlide !== slideIndex) {
+      this.slides[this.currentSlide].classList.add('prev');
+    }
+
+    // Set new active slide
+    this.currentSlide = slideIndex;
+    this.slides[this.currentSlide].classList.add('active');
+    this.dots[this.currentSlide].classList.add('active');
+  }
+
+  nextSlide() {
+    const nextIndex = (this.currentSlide + 1) % this.totalSlides;
+    this.goToSlide(nextIndex);
+  }
+
+  startAutoSlide() {
+    this.pauseAutoSlide(); // Clear any existing interval
+    this.autoSlideInterval = setInterval(() => {
+      this.nextSlide();
+    }, 6000); // Change slide every 6 seconds
+  }
+
+  pauseAutoSlide() {
+    if (this.autoSlideInterval) {
+      clearInterval(this.autoSlideInterval);
+      this.autoSlideInterval = null;
+    }
+  }
+
+  resetAutoSlide() {
+    this.startAutoSlide();
+  }
+
+  destroy() {
+    this.pauseAutoSlide();
+  }
+}
+
+// Initialize carousel
+let spaceFactsCarousel = null;
+if (document.querySelector('.space-facts-carousel')) {
+  spaceFactsCarousel = new SpaceFactsCarousel();
+}
+
 // ===== POPULAR SEARCH SUGGESTIONS =====
 document.querySelectorAll(".suggestion-tag").forEach((tag) => {
   tag.addEventListener("click", () => {
     const searchTerm = tag.dataset.search;
     searchInput.value = searchTerm;
     searchNASA(searchTerm);
-
-    // Scroll to results
-    setTimeout(() => {
-      searchResults.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 300);
+    // No scroll or jump to other sections
   });
 });
 
@@ -598,8 +844,9 @@ async function searchNASA(query) {
   searchLoading.classList.remove("hidden");
   searchResults.innerHTML = "";
 
-  // Hide popular suggestions when showing results
+  // Hide popular suggestions and ambient section when showing results
   const suggestionsSection = document.getElementById("popular-suggestions");
+  const ambientSection = document.getElementById("space-ambient-section");
 
   try {
     const response = await makeRateLimitedRequest("search", async () => {
@@ -617,11 +864,17 @@ async function searchNASA(query) {
       searchResults.innerHTML =
         '<p style="text-align: center; color: #90a4ae;">No results found. Try different keywords.</p>';
       suggestionsSection.style.display = "block";
+      if (ambientSection) {
+        ambientSection.classList.remove("hidden");
+      }
       return;
     }
 
-    // Hide suggestions when showing results
+    // Hide suggestions and ambient section when showing results
     suggestionsSection.style.display = "none";
+    if (ambientSection) {
+      ambientSection.classList.add("hidden");
+    }
 
     allSearchResults = data.collection.items;
     displayedResultsCount = 0;
@@ -635,6 +888,9 @@ async function searchNASA(query) {
             </div>
         `;
     suggestionsSection.style.display = "block";
+    if (ambientSection) {
+      ambientSection.classList.remove("hidden");
+    }
   } finally {
     searchLoading.classList.add("hidden");
   }
@@ -656,9 +912,7 @@ function displaySearchResults() {
           : description;
 
       return `
-            <div class="search-card" onclick="openModal('${imageUrl}', '${escapeHtml(
-        data.title
-      )}', '${escapeHtml(description)}')">
+            <div class="search-card">
                 <img src="${imageUrl}" alt="${escapeHtml(
         data.title
       )}" loading="lazy">
@@ -714,124 +968,33 @@ searchInput.addEventListener("keypress", (e) => {
   }
 });
 
-// ===== MARS ROVER PHOTOS =====
-const roverSelect = document.getElementById("rover-select");
-const marsBtn = document.getElementById("mars-btn");
-const marsResults = document.getElementById("mars-results");
-const marsLoading = document.getElementById("mars-loading");
-
-// Dates with confirmed photos for each rover
-const roverDates = {
-  curiosity: [
-    "2023-06-15",
-    "2022-08-05",
-    "2021-07-01",
-    "2020-05-30",
-    "2019-03-15",
-  ],
-  perseverance: ["2023-03-10", "2022-04-20", "2021-09-01", "2021-05-15"],
-  opportunity: ["2018-06-01", "2017-03-16", "2016-01-10", "2015-05-12"],
-  spirit: ["2010-03-21", "2009-05-01", "2008-07-15", "2007-02-10"],
-};
-
-// Auto-fetch single image when rover is selected
-roverSelect.addEventListener("change", () => {
-  const rover = roverSelect.value;
-  if (!rover) {
-    marsResults.innerHTML = "";
-  }
-});
-
-async function fetchMarsPhotos() {
-  const rover = roverSelect.value;
-
-  if (!rover) {
-    alert("Please select a rover first!");
-    return;
-  }
-
-  marsLoading.classList.remove("hidden");
-  marsResults.innerHTML = "";
-
-  try {
-    const dates = roverDates[rover];
-    const randomDate = dates[Math.floor(Math.random() * dates.length)];
-
-    const response = await makeRateLimitedRequest("mars", async () => {
-      const data = await window.NASAServerless.fetchMarsPhotos(rover, null, randomDate);
-      return { ok: true, json: async () => data };
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch Mars photos (${response.status})`);
-    }
-
-    const data = await response.json();
-
-    if (data.photos.length === 0) {
-      marsResults.innerHTML = `
-        <p style="text-align: center; color: #90a4ae; grid-column: 1 / -1;">
-          No photos found. Try again!
-        </p>
-      `;
-      return;
-    }
-
-    // Display single random photo
-    const photo = data.photos[0];
-    marsResults.innerHTML = `
-      <div class="mars-single-photo">
-        <img src="${
-          photo.img_src
-        }" alt="${rover} rover photo" onclick="openModal('${
-      photo.img_src
-    }', 'Mars - ${photo.camera.full_name}', 'Rover: ${
-      photo.rover.name
-    } | Sol: ${photo.sol} | Earth Date: ${photo.earth_date}')">
-        <div class="mars-photo-details">
-          <h3>${rover.charAt(0).toUpperCase() + rover.slice(1)} Rover</h3>
-          <p><strong>Camera:</strong> ${photo.camera.full_name}</p>
-          <p><strong>Date:</strong> ${photo.earth_date} (Sol ${photo.sol})</p>
-        </div>
-      </div>
-    `;
-  } catch (error) {
-    // Error handled gracefully for user
-    marsResults.innerHTML = `
-      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; color: #607d8b; grid-column: 1 / -1; min-height: 300px;">
-        <h3>Couldn't retrieve Mars photos</h3>
-        <p>There was a problem loading images from this rover.</p>
-        <p>Please try again in a moment.</p>
-      </div>
-    `;
-  } finally {
-    marsLoading.classList.add("hidden");
-  }
-}
-
-function displayMarsPhotos(photos) {
-  marsResults.innerHTML = photos
-    .slice(0, 24)
-    .map(
-      (photo) => `
-        <div class="mars-photo" onclick="openModal('${photo.img_src}', 'Mars - ${photo.camera.full_name}', 'Rover: ${photo.rover.name} | Sol: ${photo.sol} | Earth Date: ${photo.earth_date}')">
-            <img src="${photo.img_src}" alt="${photo.camera.full_name}" loading="lazy">
-            <div class="mars-photo-info">
-                <p class="mars-photo-camera">${photo.camera.full_name}</p>
-                <p class="mars-photo-date">Sol ${photo.sol} | ${photo.earth_date}</p>
-            </div>
-        </div>
-    `
-    )
-    .join("");
-}
-
-marsBtn.addEventListener("click", fetchMarsPhotos);
-
-// ===== SPACE MISSIONS =====
-const missionsContent = document.getElementById("missions-content");
-
+// ===== MISSIONS SECTION =====
+// ===== MISSIONS DATA =====
 const notableMissions = [
+    {
+      name: "Chandrayaan-2",
+      status: "completed",
+      description:
+        "India's second lunar exploration mission, featuring an orbiter, lander, and rover. The orbiter continues to study the Moon from orbit.",
+      launch: "July 22, 2019",
+      agency: "ISRO",
+    },
+    {
+      name: "Mangalyaan (Mars Orbiter Mission)",
+      status: "completed",
+      description:
+        "India's first interplanetary mission, making ISRO the fourth agency to reach Mars. Provided valuable data on Mars' surface and atmosphere.",
+      launch: "November 5, 2013",
+      agency: "ISRO",
+    },
+    {
+      name: "Aditya-L1",
+      status: "active",
+      description:
+        "India's first dedicated solar mission to study the Sun's corona, solar emissions, and space weather from the L1 Lagrange point.",
+      launch: "September 2, 2023",
+      agency: "ISRO",
+    },
   {
     name: "James Webb Space Telescope",
     status: "active",
@@ -897,10 +1060,15 @@ const notableMissions = [
     agency: "NASA, ESA, ASI",
   },
 ];
+const missionsContent = document.getElementById("missions-content");
 
-function displayMissions() {
-  missionsContent.innerHTML = notableMissions
-    .slice(0, 6)
+let displayedMissionsCount = 6;
+const MISSIONS_INITIAL_COUNT = 6;
+
+function displayMissions(showAll = false) {
+  const missionsToShow = showAll ? notableMissions : notableMissions.slice(0, MISSIONS_INITIAL_COUNT);
+  
+  const missionsHTML = missionsToShow
     .map(
       (mission) => `
         <div class="mission-card">
@@ -917,6 +1085,23 @@ function displayMissions() {
     `
     )
     .join("");
+  
+  missionsContent.innerHTML = missionsHTML;
+  
+  // Add show more button if there are more missions to show and we're not showing all
+  if (notableMissions.length > MISSIONS_INITIAL_COUNT && !showAll) {
+    const showMoreButton = `
+      <button id="show-more-missions-btn" class="show-more-btn">
+        <i class="bi bi-plus-circle"></i> Show More (${notableMissions.length - MISSIONS_INITIAL_COUNT} remaining)
+      </button>
+    `;
+    missionsContent.insertAdjacentHTML("beforeend", showMoreButton);
+    
+    // Add event listener to the show more button
+    document.getElementById("show-more-missions-btn").addEventListener("click", () => {
+      displayMissions(true);
+    });
+  }
 }
 
 displayMissions();
@@ -959,3 +1144,19 @@ function escapeHtml(text) {
 }
 
 // ===== CONSOLE WELCOME MESSAGE =====
+console.log(
+  `%c Welcome to the Space Discovery App! Explore the universe at your fingertips.`,
+  "font-size: 16px; color: #4caf50; font-weight: bold;"
+);
+
+// ===== EXPOSE CACHE MANAGEMENT FOR DEBUGGING =====
+// Make cache functions available in console for debugging
+window.APODCacheManager = {
+  getStats: () => apodCache.getCacheStats(),
+  clearAll: () => apodCache.clearAllCache(),
+  cleanup: (aggressive = false) => apodCache.cleanupOldCache(aggressive),
+  getCached: (date) => apodCache.getCachedAPOD(date),
+  remove: (date) => apodCache.removeCachedAPOD(date)
+};
+
+
