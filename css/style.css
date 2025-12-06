@@ -695,6 +695,7 @@ main {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 25px;
   margin-top: 30px;
+  align-items: start; /* Prevent cards from stretching to match tallest card */
 }
 
 .search-card {
@@ -704,6 +705,7 @@ main {
   border: 1px solid rgba(100, 181, 246, 0.2);
   transition: all 0.3s ease;
   cursor: pointer;
+  height: auto; /* Allow individual card heights */
 }
 
 .search-card:hover {
@@ -744,6 +746,33 @@ main {
   -webkit-line-clamp: 3;
   line-clamp: 3;
   overflow: hidden;
+}
+
+/* Use data attribute for expanded state to avoid class conflicts */
+.search-card-description[data-expanded="true"] {
+  display: block !important;
+  -webkit-box-orient: unset !important;
+  -webkit-line-clamp: unset !important;
+  line-clamp: unset !important;
+  overflow: visible !important;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.read-more-btn {
+  background: none;
+  border: none;
+  color: #64b5f6;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 8px;
+  padding: 4px 0;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.read-more-btn:hover {
+  color: #90caf9;
 }
 
 /* ===== MISSIONS SECTION ===== */
@@ -1368,6 +1397,18 @@ main {
   border-radius: 16px;
   padding: 30px;
   backdrop-filter: blur(5px);
+  cursor: pointer;
+  user-select: none;
+}
+
+.fact-card:hover {
+  background: rgba(100, 181, 246, 0.08);
+  border-color: rgba(100, 181, 246, 0.3);
+  transform: translateX(0) scale(1.02);
+}
+
+.fact-card:active {
+  transform: translateX(0) scale(0.98);
 }
 
 .fact-card.active {
@@ -1417,13 +1458,13 @@ main {
 .carousel-dots {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 40px;
 }
 
 .dot {
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: rgba(100, 181, 246, 0.3);
   cursor: pointer;
@@ -1444,11 +1485,11 @@ main {
 .dot.active::before {
   content: "";
   position: absolute;
-  top: -4px;
-  left: -4px;
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(100, 181, 246, 0.3);
+  top: -3px;
+  left: -3px;
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(100, 181, 246, 0.3);
   border-radius: 50%;
   animation: dotRipple 2s ease-out infinite;
 }

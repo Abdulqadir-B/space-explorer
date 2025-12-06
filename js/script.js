@@ -290,7 +290,9 @@ class RateLimiter {
     let message = "";
 
     if (info.reason === "blocked") {
-      message = `🌟 Taking a breather from space exploration! Please wait ${Math.ceil(info.waitTime)} more seconds, then continue your cosmic journey.`;
+      message = `🌟 Taking a breather from space exploration! Please wait ${Math.ceil(
+        info.waitTime
+      )} more seconds, then continue your cosmic journey.`;
     } else if (info.reason === "endpoint_limit") {
       message = `You've reached the limit for ${info.endpoint} requests. Resets in ${info.resetIn} minutes.`;
     } else if (info.reason === "global_limit") {
@@ -496,7 +498,7 @@ navLinks.forEach((link) => {
 // ===== APOD CACHE MANAGEMENT =====
 class APODCache {
   constructor() {
-    this.CACHE_KEY = 'nasa_apod_cache';
+    this.CACHE_KEY = "nasa_apod_cache";
     this.CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
   }
 
@@ -508,7 +510,7 @@ class APODCache {
 
       const cacheData = JSON.parse(cached);
       const now = Date.now();
-      
+
       // Check if cache is still valid
       if (now - cacheData.timestamp < this.CACHE_DURATION) {
         return cacheData.data;
@@ -518,7 +520,7 @@ class APODCache {
         return null;
       }
     } catch (error) {
-      console.error('Error reading APOD cache:', error);
+      console.error("Error reading APOD cache:", error);
       return null;
     }
   }
@@ -529,23 +531,32 @@ class APODCache {
       const cacheData = {
         data: data,
         timestamp: Date.now(),
-        date: date
+        date: date,
       };
-      
-      localStorage.setItem(`${this.CACHE_KEY}_${date}`, JSON.stringify(cacheData));
-      
+
+      localStorage.setItem(
+        `${this.CACHE_KEY}_${date}`,
+        JSON.stringify(cacheData)
+      );
+
       // Clean up old cache entries (keep only last 7 days)
       this.cleanupOldCache();
     } catch (error) {
-      console.error('Error saving APOD to cache:', error);
+      console.error("Error saving APOD to cache:", error);
       // If localStorage is full, try to clear old entries
-      if (error.name === 'QuotaExceededError') {
+      if (error.name === "QuotaExceededError") {
         this.cleanupOldCache(true);
         // Try saving again after cleanup
         try {
-          localStorage.setItem(`${this.CACHE_KEY}_${date}`, JSON.stringify(cacheData));
+          localStorage.setItem(
+            `${this.CACHE_KEY}_${date}`,
+            JSON.stringify(cacheData)
+          );
         } catch (retryError) {
-          console.error('Failed to save APOD cache even after cleanup:', retryError);
+          console.error(
+            "Failed to save APOD cache even after cleanup:",
+            retryError
+          );
         }
       }
     }
@@ -556,7 +567,7 @@ class APODCache {
     try {
       localStorage.removeItem(`${this.CACHE_KEY}_${date}`);
     } catch (error) {
-      console.error('Error removing APOD cache:', error);
+      console.error("Error removing APOD cache:", error);
     }
   }
 
@@ -564,12 +575,16 @@ class APODCache {
   cleanupOldCache(aggressive = false) {
     try {
       const keys = Object.keys(localStorage);
-      const apodCacheKeys = keys.filter(key => key.startsWith(this.CACHE_KEY));
-      
+      const apodCacheKeys = keys.filter((key) =>
+        key.startsWith(this.CACHE_KEY)
+      );
+
       const now = Date.now();
-      const keepDuration = aggressive ? 3 * 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000; // 3 or 7 days
-      
-      apodCacheKeys.forEach(key => {
+      const keepDuration = aggressive
+        ? 3 * 24 * 60 * 60 * 1000
+        : 7 * 24 * 60 * 60 * 1000; // 3 or 7 days
+
+      apodCacheKeys.forEach((key) => {
         try {
           const cached = localStorage.getItem(key);
           if (cached) {
@@ -584,30 +599,32 @@ class APODCache {
         }
       });
     } catch (error) {
-      console.error('Error during cache cleanup:', error);
+      console.error("Error during cache cleanup:", error);
     }
   }
 
   // Get cache statistics
   getCacheStats() {
-    const keys = Object.keys(localStorage).filter(key => key.startsWith(this.CACHE_KEY));
+    const keys = Object.keys(localStorage).filter((key) =>
+      key.startsWith(this.CACHE_KEY)
+    );
     const stats = {
       totalEntries: keys.length,
-      entries: []
+      entries: [],
     };
 
-    keys.forEach(key => {
+    keys.forEach((key) => {
       try {
         const cached = localStorage.getItem(key);
         if (cached) {
           const cacheData = JSON.parse(cached);
           const age = Date.now() - cacheData.timestamp;
           const isExpired = age > this.CACHE_DURATION;
-          
+
           stats.entries.push({
             date: cacheData.date,
             age: Math.floor(age / (60 * 60 * 1000)), // age in hours
-            expired: isExpired
+            expired: isExpired,
           });
         }
       } catch (error) {
@@ -621,10 +638,12 @@ class APODCache {
   // Clear all APOD cache
   clearAllCache() {
     try {
-      const keys = Object.keys(localStorage).filter(key => key.startsWith(this.CACHE_KEY));
-      keys.forEach(key => localStorage.removeItem(key));
+      const keys = Object.keys(localStorage).filter((key) =>
+        key.startsWith(this.CACHE_KEY)
+      );
+      keys.forEach((key) => localStorage.removeItem(key));
     } catch (error) {
-      console.error('Error clearing APOD cache:', error);
+      console.error("Error clearing APOD cache:", error);
     }
   }
 }
@@ -646,7 +665,7 @@ async function fetchAPOD(date = today) {
   try {
     // First, check if we have valid cached data
     const cachedData = apodCache.getCachedAPOD(date);
-    
+
     if (cachedData) {
       // Use cached data
       displayAPOD(cachedData);
@@ -664,10 +683,10 @@ async function fetchAPOD(date = today) {
     }
 
     const data = await response.json();
-    
+
     // Save to cache before displaying
     apodCache.saveToCache(date, data);
-    
+
     displayAPOD(data);
   } catch (error) {
     // Error handled gracefully for user
@@ -742,11 +761,19 @@ const RESULTS_PER_PAGE = 4;
 class SpaceFactsCarousel {
   constructor() {
     this.currentSlide = 0;
-    this.slides = document.querySelectorAll('.fact-card');
-    this.dots = document.querySelectorAll('.carousel-dots .dot');
+    this.slides = document.querySelectorAll(".fact-card");
+    this.dots = document.querySelectorAll(".carousel-dots .dot");
     this.totalSlides = this.slides.length;
     this.autoSlideInterval = null;
-    
+    this.carousel = document.querySelector(".space-facts-carousel");
+
+    // Touch/swipe properties
+    this.startX = 0;
+    this.startY = 0;
+    this.endX = 0;
+    this.endY = 0;
+    this.minSwipeDistance = 50;
+
     if (this.slides.length > 0) {
       this.init();
     }
@@ -755,39 +782,85 @@ class SpaceFactsCarousel {
   init() {
     // Add click listeners to dots
     this.dots.forEach((dot, index) => {
-      dot.addEventListener('click', () => {
+      dot.addEventListener("click", () => {
         this.goToSlide(index);
         this.resetAutoSlide();
       });
     });
 
+    // Add click listener to fact cards (click anywhere to advance)
+    this.slides.forEach((slide) => {
+      slide.addEventListener("click", () => {
+        this.nextSlide();
+        this.resetAutoSlide();
+      });
+
+      // Add pointer cursor to indicate clickability
+      slide.style.cursor = "pointer";
+    });
+
+    // Add touch/swipe listeners
+    if (this.carousel) {
+      this.carousel.addEventListener(
+        "touchstart",
+        this.handleTouchStart.bind(this),
+        { passive: true }
+      );
+      this.carousel.addEventListener(
+        "touchmove",
+        this.handleTouchMove.bind(this),
+        { passive: true }
+      );
+      this.carousel.addEventListener(
+        "touchend",
+        this.handleTouchEnd.bind(this),
+        { passive: true }
+      );
+
+      // Mouse drag support for desktop
+      this.carousel.addEventListener(
+        "mousedown",
+        this.handleMouseStart.bind(this)
+      );
+      this.carousel.addEventListener(
+        "mousemove",
+        this.handleMouseMove.bind(this)
+      );
+      this.carousel.addEventListener("mouseup", this.handleMouseEnd.bind(this));
+      this.carousel.addEventListener(
+        "mouseleave",
+        this.handleMouseEnd.bind(this)
+      );
+    }
+
     // Start auto-slide
     this.startAutoSlide();
 
-    // Pause auto-slide on hover
-    const carousel = document.querySelector('.space-facts-carousel');
-    if (carousel) {
-      carousel.addEventListener('mouseenter', () => this.pauseAutoSlide());
-      carousel.addEventListener('mouseleave', () => this.startAutoSlide());
+    // Pause auto-slide on hover/focus
+    if (this.carousel) {
+      this.carousel.addEventListener("mouseenter", () => this.pauseAutoSlide());
+      this.carousel.addEventListener("mouseleave", () => this.startAutoSlide());
+      this.carousel.addEventListener("focusin", () => this.pauseAutoSlide());
+      this.carousel.addEventListener("focusout", () => this.startAutoSlide());
     }
   }
 
   goToSlide(slideIndex) {
     // Remove active classes
-    this.slides.forEach(slide => {
-      slide.classList.remove('active', 'prev');
+    this.slides.forEach((slide) => {
+      slide.classList.remove("active", "prev");
     });
-    this.dots.forEach(dot => dot.classList.remove('active'));
+    this.dots.forEach((dot) => dot.classList.remove("active"));
 
     // Set previous slide
     if (this.currentSlide !== slideIndex) {
-      this.slides[this.currentSlide].classList.add('prev');
+      this.slides[this.currentSlide].classList.add("prev");
     }
 
     // Set new active slide
     this.currentSlide = slideIndex;
-    this.slides[this.currentSlide].classList.add('active');
-    this.dots[this.currentSlide].classList.add('active');
+    this.slides[this.currentSlide].classList.add("active");
+    this.dots[this.currentSlide].classList.add("active");
   }
 
   nextSlide() {
@@ -795,11 +868,96 @@ class SpaceFactsCarousel {
     this.goToSlide(nextIndex);
   }
 
+  prevSlide() {
+    const prevIndex =
+      (this.currentSlide - 1 + this.totalSlides) % this.totalSlides;
+    this.goToSlide(prevIndex);
+  }
+
+  // Touch event handlers
+  handleTouchStart(e) {
+    this.startX = e.touches[0].clientX;
+    this.startY = e.touches[0].clientY;
+    this.pauseAutoSlide();
+  }
+
+  handleTouchMove(e) {
+    if (!this.startX || !this.startY) return;
+
+    this.endX = e.touches[0].clientX;
+    this.endY = e.touches[0].clientY;
+  }
+
+  handleTouchEnd(e) {
+    if (!this.startX || !this.startY) return;
+
+    const deltaX = this.endX - this.startX;
+    const deltaY = this.endY - this.startY;
+
+    // Check if horizontal swipe is dominant
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (Math.abs(deltaX) > this.minSwipeDistance) {
+        if (deltaX > 0) {
+          this.prevSlide(); // Swipe right = previous
+        } else {
+          this.nextSlide(); // Swipe left = next
+        }
+      }
+    }
+
+    this.resetGestureState();
+    this.resetAutoSlide();
+  }
+
+  // Mouse drag handlers (for desktop)
+  handleMouseStart(e) {
+    this.startX = e.clientX;
+    this.startY = e.clientY;
+    this.isDragging = true;
+    this.pauseAutoSlide();
+  }
+
+  handleMouseMove(e) {
+    if (!this.isDragging) return;
+
+    this.endX = e.clientX;
+    this.endY = e.clientY;
+  }
+
+  handleMouseEnd(e) {
+    if (!this.isDragging) return;
+
+    const deltaX = this.endX - this.startX;
+    const deltaY = this.endY - this.startY;
+
+    // Check if horizontal drag is dominant
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (Math.abs(deltaX) > this.minSwipeDistance) {
+        if (deltaX > 0) {
+          this.prevSlide(); // Drag right = previous
+        } else {
+          this.nextSlide(); // Drag left = next
+        }
+      }
+    }
+
+    this.resetGestureState();
+    this.resetAutoSlide();
+  }
+
+  resetGestureState() {
+    this.startX = 0;
+    this.startY = 0;
+    this.endX = 0;
+    this.endY = 0;
+    this.isDragging = false;
+  }
+
   startAutoSlide() {
     this.pauseAutoSlide(); // Clear any existing interval
     this.autoSlideInterval = setInterval(() => {
       this.nextSlide();
-    }, 6000); // Change slide every 6 seconds
+    }, 5000); // Change slide every 5 seconds
   }
 
   pauseAutoSlide() {
@@ -815,12 +973,13 @@ class SpaceFactsCarousel {
 
   destroy() {
     this.pauseAutoSlide();
+    this.resetGestureState();
   }
 }
 
 // Initialize carousel
 let spaceFactsCarousel = null;
-if (document.querySelector('.space-facts-carousel')) {
+if (document.querySelector(".space-facts-carousel")) {
   spaceFactsCarousel = new SpaceFactsCarousel();
 }
 
@@ -902,7 +1061,7 @@ function displaySearchResults() {
   const itemsToShow = allSearchResults.slice(startIndex, endIndex);
 
   const resultsHTML = itemsToShow
-    .map((item) => {
+    .map((item, index) => {
       const data = item.data[0];
       const imageUrl = item.links ? item.links[0].href : "";
       const description = data.description || "No description available";
@@ -910,6 +1069,12 @@ function displaySearchResults() {
         description.length > 150
           ? description.substring(0, 150) + "..."
           : description;
+      const needsReadMore = description.length > 150;
+      // Create truly unique ID using NASA ID or a combination that's always unique
+      const uniqueId = data.nasa_id
+        ? data.nasa_id.replace(/[^a-zA-Z0-9]/g, "")
+        : `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const cardId = `${uniqueId}_${displayedResultsCount + index}`;
 
       return `
             <div class="search-card">
@@ -923,9 +1088,14 @@ function displaySearchResults() {
                         ? new Date(data.date_created).toLocaleDateString()
                         : ""
                     }</p>
-                    <p class="search-card-description">${escapeHtml(
-                      truncatedDesc
-                    )}</p>
+                    <p class="search-card-description" id="desc-${cardId}" data-full="${escapeHtml(
+        description
+      )}">${escapeHtml(truncatedDesc)}</p>
+                    ${
+                      needsReadMore
+                        ? `<button class="read-more-btn" id="btn-${cardId}" onclick="toggleDescription('${cardId}')">Read More</button>`
+                        : ""
+                    }
                 </div>
             </div>
         `;
@@ -971,30 +1141,30 @@ searchInput.addEventListener("keypress", (e) => {
 // ===== MISSIONS SECTION =====
 // ===== MISSIONS DATA =====
 const notableMissions = [
-    {
-      name: "Chandrayaan-2",
-      status: "completed",
-      description:
-        "India's second lunar exploration mission, featuring an orbiter, lander, and rover. The orbiter continues to study the Moon from orbit.",
-      launch: "July 22, 2019",
-      agency: "ISRO",
-    },
-    {
-      name: "Mangalyaan (Mars Orbiter Mission)",
-      status: "completed",
-      description:
-        "India's first interplanetary mission, making ISRO the fourth agency to reach Mars. Provided valuable data on Mars' surface and atmosphere.",
-      launch: "November 5, 2013",
-      agency: "ISRO",
-    },
-    {
-      name: "Aditya-L1",
-      status: "active",
-      description:
-        "India's first dedicated solar mission to study the Sun's corona, solar emissions, and space weather from the L1 Lagrange point.",
-      launch: "September 2, 2023",
-      agency: "ISRO",
-    },
+  {
+    name: "Chandrayaan-2",
+    status: "completed",
+    description:
+      "India's second lunar exploration mission, featuring an orbiter, lander, and rover. The orbiter continues to study the Moon from orbit.",
+    launch: "July 22, 2019",
+    agency: "ISRO",
+  },
+  {
+    name: "Mangalyaan (Mars Orbiter Mission)",
+    status: "completed",
+    description:
+      "India's first interplanetary mission, making ISRO the fourth agency to reach Mars. Provided valuable data on Mars' surface and atmosphere.",
+    launch: "November 5, 2013",
+    agency: "ISRO",
+  },
+  {
+    name: "Aditya-L1",
+    status: "active",
+    description:
+      "India's first dedicated solar mission to study the Sun's corona, solar emissions, and space weather from the L1 Lagrange point.",
+    launch: "September 2, 2023",
+    agency: "ISRO",
+  },
   {
     name: "James Webb Space Telescope",
     status: "active",
@@ -1065,9 +1235,24 @@ const missionsContent = document.getElementById("missions-content");
 let displayedMissionsCount = 6;
 const MISSIONS_INITIAL_COUNT = 6;
 
+// Shuffle function to randomize array order
+function shuffleArray(array) {
+  const shuffled = [...array]; // Create a copy to avoid mutating original
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Create shuffled missions array
+const shuffledMissions = shuffleArray(notableMissions);
+
 function displayMissions(showAll = false) {
-  const missionsToShow = showAll ? notableMissions : notableMissions.slice(0, MISSIONS_INITIAL_COUNT);
-  
+  const missionsToShow = showAll
+    ? shuffledMissions
+    : shuffledMissions.slice(0, MISSIONS_INITIAL_COUNT);
+
   const missionsHTML = missionsToShow
     .map(
       (mission) => `
@@ -1085,22 +1270,26 @@ function displayMissions(showAll = false) {
     `
     )
     .join("");
-  
+
   missionsContent.innerHTML = missionsHTML;
-  
+
   // Add show more button if there are more missions to show and we're not showing all
-  if (notableMissions.length > MISSIONS_INITIAL_COUNT && !showAll) {
+  if (shuffledMissions.length > MISSIONS_INITIAL_COUNT && !showAll) {
     const showMoreButton = `
       <button id="show-more-missions-btn" class="show-more-btn">
-        <i class="bi bi-plus-circle"></i> Show More (${notableMissions.length - MISSIONS_INITIAL_COUNT} remaining)
+        <i class="bi bi-plus-circle"></i> Show More (${
+          shuffledMissions.length - MISSIONS_INITIAL_COUNT
+        } remaining)
       </button>
     `;
     missionsContent.insertAdjacentHTML("beforeend", showMoreButton);
-    
+
     // Add event listener to the show more button
-    document.getElementById("show-more-missions-btn").addEventListener("click", () => {
-      displayMissions(true);
-    });
+    document
+      .getElementById("show-more-missions-btn")
+      .addEventListener("click", () => {
+        displayMissions(true);
+      });
   }
 }
 
@@ -1143,6 +1332,51 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+// ===== READ MORE FUNCTIONALITY =====
+function toggleDescription(cardId) {
+  const descElement = document.querySelector(`#desc-${cardId}`);
+  const button = document.querySelector(`#btn-${cardId}`);
+
+  if (!descElement || !button) {
+    return;
+  }
+
+  const isExpanded = descElement.getAttribute("data-expanded") === "true";
+
+  // First, reset all cards to collapsed state
+  document.querySelectorAll(".search-card-description").forEach((el) => {
+    if (el !== descElement) {
+      el.removeAttribute("data-expanded");
+      const otherCardId = el.id.replace("desc-", "");
+      const otherButton = document.querySelector(`#btn-${otherCardId}`);
+      if (otherButton) otherButton.textContent = "Read More";
+
+      // Reset content to truncated version
+      const fullText = el.dataset.full;
+      if (fullText && fullText.length > 150) {
+        const truncatedText = fullText.substring(0, 150) + "...";
+        el.innerHTML = escapeHtml(truncatedText);
+      }
+    }
+  });
+
+  if (isExpanded) {
+    // Collapse: show truncated version
+    const fullText = descElement.dataset.full;
+    const truncatedText =
+      fullText.length > 150 ? fullText.substring(0, 150) + "..." : fullText;
+    descElement.innerHTML = escapeHtml(truncatedText);
+    descElement.removeAttribute("data-expanded");
+    button.textContent = "Read More";
+  } else {
+    // Expand: show full text
+    const fullText = descElement.dataset.full;
+    descElement.innerHTML = escapeHtml(fullText);
+    descElement.setAttribute("data-expanded", "true");
+    button.textContent = "Read Less";
+  }
+}
+
 // ===== CONSOLE WELCOME MESSAGE =====
 console.log(
   `%c Welcome to the Space Discovery App! Explore the universe at your fingertips.`,
@@ -1156,7 +1390,5 @@ window.APODCacheManager = {
   clearAll: () => apodCache.clearAllCache(),
   cleanup: (aggressive = false) => apodCache.cleanupOldCache(aggressive),
   getCached: (date) => apodCache.getCachedAPOD(date),
-  remove: (date) => apodCache.removeCachedAPOD(date)
+  remove: (date) => apodCache.removeCachedAPOD(date),
 };
-
-
