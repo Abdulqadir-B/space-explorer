@@ -12,7 +12,7 @@ class RateLimiter {
     this.limits = {
       apod: { max: 10, interval: 3600000 }, // 10 per hour
       search: { max: 15, interval: 3600000 }, // 15 per hour
-      mars: { max: 10, interval: 3600000 }, // 10 per hour
+      neo: { max: 10, interval: 3600000 }, // 10 per hour
       global: { max: 30, interval: 3600000 }, // 30 total per hour (DEMO_KEY limit)
     };
 
@@ -123,20 +123,34 @@ class RateLimiter {
     const saved = localStorage.getItem("rateLimitBuckets");
     if (saved) {
       const buckets = JSON.parse(saved);
-      // Reset buckets if needed
       const now = Date.now();
-      Object.keys(buckets).forEach((endpoint) => {
-        if (
-          now - buckets[endpoint].lastRefill >
-          this.limits[endpoint].interval
-        ) {
-          buckets[endpoint] = {
+
+      // Clean up old endpoints and validate current ones
+      const validBuckets = {};
+      Object.keys(this.limits).forEach((endpoint) => {
+        if (buckets[endpoint]) {
+          // Endpoint exists in saved data, check if needs refill
+          if (
+            now - buckets[endpoint].lastRefill >
+            this.limits[endpoint].interval
+          ) {
+            validBuckets[endpoint] = {
+              tokens: this.limits[endpoint].max,
+              lastRefill: now,
+            };
+          } else {
+            validBuckets[endpoint] = buckets[endpoint];
+          }
+        } else {
+          // New endpoint, initialize it
+          validBuckets[endpoint] = {
             tokens: this.limits[endpoint].max,
             lastRefill: now,
           };
         }
       });
-      return buckets;
+
+      return validBuckets;
     }
 
     // Initialize buckets
@@ -1382,6 +1396,353 @@ console.log(
   `%c Welcome to the Space Discovery App! Explore the universe at your fingertips.`,
   "font-size: 16px; color: #4caf50; font-weight: bold;"
 );
+
+// ===== NEAR EARTH OBJECTS (NEO) =====
+const neoDateInput = document.getElementById("neo-date");
+const neoSortSelect = document.getElementById("neo-sort");
+const neoLoadBtn = document.getElementById("neo-load-btn");
+const neoLoading = document.getElementById("neo-loading");
+const neoStats = document.getElementById("neo-stats");
+const neoResults = document.getElementById("neo-results");
+const neoHero = document.getElementById("neo-hero");
+
+let neoData = [];
+let displayedNEOCount = 0;
+const NEO_INITIAL_COUNT = 6;
+
+// Set default date to today
+if (neoDateInput) {
+  const today = new Date().toISOString().split("T")[0];
+  neoDateInput.value = today;
+  neoDateInput.max = today; // Can't select future dates
+
+  // Set min date to 7 days ago (NASA API limitation)
+  const minDate = new Date();
+  minDate.setDate(minDate.getDate() - 7);
+  neoDateInput.min = minDate.toISOString().split("T")[0];
+}
+
+// Load NEO data
+async function loadNEOData() {
+  if (!rateLimiter.consumeToken("neo")) {
+    return;
+  }
+
+  const selectedDate = neoDateInput.value;
+  if (!selectedDate) {
+    showNotification("Please select a date", "error");
+    return;
+  }
+
+  neoLoading.classList.remove("hidden");
+  neoResults.innerHTML = "";
+  neoStats.classList.add("hidden");
+  
+  // Hide hero section when loading starts
+  if (neoHero) {
+    neoHero.classList.add("hidden");
+  }
+
+  try {
+    const response = await fetch(
+      `/api/nasa?endpoint=neo&start_date=${selectedDate}&end_date=${selectedDate}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Extract asteroids from the response
+    const dateKey = Object.keys(data.near_earth_objects)[0];
+    neoData = data.near_earth_objects[dateKey] || [];
+
+    if (neoData.length === 0) {
+      neoResults.innerHTML = `
+        <div class="no-results">
+          <i class="bi bi-emoji-frown"></i>
+          <p>No asteroids found for this date.</p>
+          <small>Try selecting a different date</small>
+        </div>
+      `;
+      return;
+    }
+
+    // Display stats
+    displayNEOStats(neoData, data.element_count);
+
+    // Sort and display results
+    sortAndDisplayNEO();
+  } catch (error) {
+    console.error("Error fetching NEO data:", error);
+    neoResults.innerHTML = `
+      <div class="error-message">
+        <i class="bi bi-exclamation-triangle"></i>
+        <p>Failed to load asteroid data</p>
+        <small>${error.message}</small>
+      </div>
+    `;
+  } finally {
+    neoLoading.classList.add("hidden");
+  }
+}
+
+function displayNEOStats(asteroids, totalCount) {
+  const hazardousCount = asteroids.filter(
+    (a) => a.is_potentially_hazardous_asteroid
+  ).length;
+  const safeCount = asteroids.length - hazardousCount;
+
+  // Find closest asteroid
+  const closest = asteroids.reduce((min, a) => {
+    const distance = parseFloat(
+      a.close_approach_data[0].miss_distance.kilometers
+    );
+    const minDistance = parseFloat(
+      min.close_approach_data[0].miss_distance.kilometers
+    );
+    return distance < minDistance ? a : min;
+  });
+
+  const closestDistance = parseFloat(
+    closest.close_approach_data[0].miss_distance.kilometers
+  );
+  const moonDistance = 384400; // km to moon
+  const distanceToMoon = (closestDistance / moonDistance).toFixed(2);
+
+  neoStats.innerHTML = `
+    <div class="neo-stats-grid">
+      <div class="neo-stat-card">
+        <div class="neo-stat-icon"><i class="bi bi-gem"></i></div>
+        <div class="neo-stat-value">${asteroids.length}</div>
+        <div class="neo-stat-label">Total Asteroids</div>
+      </div>
+      <div class="neo-stat-card safe">
+        <div class="neo-stat-icon"><i class="bi bi-shield-check"></i></div>
+        <div class="neo-stat-value">${safeCount}</div>
+        <div class="neo-stat-label">Safe</div>
+      </div>
+      <div class="neo-stat-card hazardous">
+        <div class="neo-stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="neo-stat-value">${hazardousCount}</div>
+        <div class="neo-stat-label">Potentially Hazardous</div>
+      </div>
+      <div class="neo-stat-card closest">
+        <div class="neo-stat-icon"><i class="bi bi-bullseye"></i></div>
+        <div class="neo-stat-value">${distanceToMoon}x</div>
+        <div class="neo-stat-label">Closest (Moon Distance)</div>
+      </div>
+    </div>
+  `;
+  neoStats.classList.remove("hidden");
+}
+
+function sortAndDisplayNEO(showAll = false) {
+  const sortType = neoSortSelect.value;
+  let sorted = [...neoData];
+
+  switch (sortType) {
+    case "closest":
+      sorted.sort((a, b) => {
+        const distA = parseFloat(
+          a.close_approach_data[0].miss_distance.kilometers
+        );
+        const distB = parseFloat(
+          b.close_approach_data[0].miss_distance.kilometers
+        );
+        return distA - distB;
+      });
+      break;
+    case "size":
+      sorted.sort((a, b) => {
+        const sizeA = a.estimated_diameter.meters.estimated_diameter_max;
+        const sizeB = b.estimated_diameter.meters.estimated_diameter_max;
+        return sizeB - sizeA;
+      });
+      break;
+    case "speed":
+      sorted.sort((a, b) => {
+        const speedA = parseFloat(
+          a.close_approach_data[0].relative_velocity.kilometers_per_hour
+        );
+        const speedB = parseFloat(
+          b.close_approach_data[0].relative_velocity.kilometers_per_hour
+        );
+        return speedB - speedA;
+      });
+      break;
+  }
+
+  displayNEOResults(sorted, showAll);
+}
+
+function displayNEOResults(asteroids, showAll = false) {
+  const asteroidsToShow = showAll
+    ? asteroids
+    : asteroids.slice(0, NEO_INITIAL_COUNT);
+  displayedNEOCount = asteroidsToShow.length;
+
+  const neoHTML = asteroidsToShow
+    .map((asteroid) => {
+      const approach = asteroid.close_approach_data[0];
+      const diameter = asteroid.estimated_diameter.meters;
+      const avgDiameter = (
+        (diameter.estimated_diameter_min + diameter.estimated_diameter_max) /
+        2
+      ).toFixed(0);
+      const speed = parseFloat(
+        approach.relative_velocity.kilometers_per_hour
+      ).toLocaleString();
+      const distance = parseFloat(
+        approach.miss_distance.kilometers
+      ).toLocaleString();
+      const isHazardous = asteroid.is_potentially_hazardous_asteroid;
+
+      // Determine size category
+      let sizeCategory = "small";
+      let sizeIcon = "bi-gem";
+      let sizeLabel = "Small";
+      if (avgDiameter > 1000) {
+        sizeCategory = "huge";
+        sizeIcon = "bi-circle-fill";
+        sizeLabel = "Huge";
+      } else if (avgDiameter > 500) {
+        sizeCategory = "large";
+        sizeIcon = "bi-circle";
+        sizeLabel = "Large";
+      } else if (avgDiameter > 100) {
+        sizeCategory = "medium";
+        sizeIcon = "bi-hexagon";
+        sizeLabel = "Medium";
+      }
+
+      return `
+        <div class="neo-card ${isHazardous ? "hazardous" : "safe"}">
+          <div class="neo-card-header">
+            <div class="neo-name">
+              <i class="bi ${sizeIcon}"></i>
+              <h3>${asteroid.name.replace("(", "").replace(")", "")}</h3>
+            </div>
+            ${
+              isHazardous
+                ? '<div class="neo-hazard-badge"><i class="bi bi-exclamation-triangle-fill"></i> POTENTIALLY HAZARDOUS</div>'
+                : '<div class="neo-safe-badge"><i class="bi bi-shield-check"></i> SAFE</div>'
+            }
+          </div>
+          
+          <div class="neo-card-body">
+            <div class="neo-info-grid">
+              <div class="neo-info-item">
+                <div class="neo-info-icon"><i class="bi bi-rulers"></i></div>
+                <div class="neo-info-content">
+                  <div class="neo-info-label">Diameter</div>
+                  <div class="neo-info-value">${avgDiameter} m</div>
+                  <div class="neo-info-sublabel">${sizeLabel}</div>
+                </div>
+              </div>
+              
+              <div class="neo-info-item">
+                <div class="neo-info-icon"><i class="bi bi-speedometer2"></i></div>
+                <div class="neo-info-content">
+                  <div class="neo-info-label">Speed</div>
+                  <div class="neo-info-value">${speed}</div>
+                  <div class="neo-info-sublabel">km/h</div>
+                </div>
+              </div>
+              
+              <div class="neo-info-item">
+                <div class="neo-info-icon"><i class="bi bi-arrow-left-right"></i></div>
+                <div class="neo-info-content">
+                  <div class="neo-info-label">Miss Distance</div>
+                  <div class="neo-info-value">${distance}</div>
+                  <div class="neo-info-sublabel">km</div>
+                </div>
+              </div>
+              
+              <div class="neo-info-item">
+                <div class="neo-info-icon"><i class="bi bi-calendar-event"></i></div>
+                <div class="neo-info-content">
+                  <div class="neo-info-label">Approach Date</div>
+                  <div class="neo-info-value">${new Date(
+                    approach.close_approach_date_full
+                  ).toLocaleDateString()}</div>
+                  <div class="neo-info-sublabel">${new Date(
+                    approach.close_approach_date_full
+                  ).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="neo-details">
+              <div class="neo-detail-row">
+                <span class="neo-detail-label"><i class="bi bi-globe"></i> Orbiting Body:</span>
+                <span class="neo-detail-value">${approach.orbiting_body}</span>
+              </div>
+              <div class="neo-detail-row">
+                <span class="neo-detail-label"><i class="bi bi-hash"></i> NASA JPL ID:</span>
+                <span class="neo-detail-value">${asteroid.id}</span>
+              </div>
+              ${
+                asteroid.nasa_jpl_url
+                  ? `<a href="${asteroid.nasa_jpl_url}" target="_blank" class="neo-more-info">
+                      <i class="bi bi-box-arrow-up-right"></i> More Info on NASA JPL
+                    </a>`
+                  : ""
+              }
+            </div>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  neoResults.innerHTML = neoHTML;
+
+  // Add show more button if there are more asteroids to show
+  if (asteroids.length > NEO_INITIAL_COUNT && !showAll) {
+    const showMoreButton = `
+      <button id="show-more-neo-btn" class="show-more-btn">
+        <i class="bi bi-plus-circle"></i> Show More (${
+          asteroids.length - displayedNEOCount
+        } remaining)
+      </button>
+    `;
+    neoResults.insertAdjacentHTML("beforeend", showMoreButton);
+
+    // Add event listener to the show more button
+    document
+      .getElementById("show-more-neo-btn")
+      .addEventListener("click", () => {
+        displayNEOResults(asteroids, true);
+      });
+  }
+}
+
+// Event listeners
+if (neoLoadBtn) {
+  neoLoadBtn.addEventListener("click", loadNEOData);
+}
+
+if (neoSortSelect) {
+  neoSortSelect.addEventListener("change", () => {
+    if (neoData.length > 0) {
+      sortAndDisplayNEO();
+    }
+  });
+}
+
+if (neoDateInput) {
+  neoDateInput.addEventListener("change", () => {
+    // Auto-load when date changes
+    if (neoDateInput.value) {
+      loadNEOData();
+    }
+  });
+}
 
 // ===== EXPOSE CACHE MANAGEMENT FOR DEBUGGING =====
 // Make cache functions available in console for debugging

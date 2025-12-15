@@ -25,26 +25,19 @@ module.exports = async (req, res) => {
     // Define allowed NASA API endpoints
     const endpoints = {
       apod: "https://api.nasa.gov/planetary/apod",
-      marsPhotos: "https://api.nasa.gov/mars-photos/api/v1/rovers",
+      neo: "https://api.nasa.gov/neo/rest/v1/feed",
       imageSearch: "https://images-api.nasa.gov/search",
     };
 
     // Validate endpoint
     if (!endpoint || !endpoints[endpoint]) {
       return res.status(400).json({
-        error: "Invalid endpoint. Allowed: apod, marsPhotos, imageSearch",
+        error: "Invalid endpoint. Allowed: apod, neo, imageSearch",
       });
     }
 
     // Build NASA API URL
     let nasaUrl = endpoints[endpoint];
-
-    // Add additional path for Mars photos
-    if (endpoint === "marsPhotos" && params.rover && params.path) {
-      nasaUrl += `/${params.rover}/${params.path}`;
-      delete params.rover;
-      delete params.path;
-    }
 
     // Add API key for NASA API endpoints (not needed for images API)
     const queryParams = new URLSearchParams(params);

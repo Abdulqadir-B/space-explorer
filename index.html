@@ -63,10 +63,10 @@
             </li>
             <li><a href="#" class="nav-link" data-section="search"><span class="nav-link-icon"><i
                             class="bi bi-search"></i></span><span class="nav-link-text">Search Space</span></a></li>
+            <li><a href="#" class="nav-link" data-section="neo"><span class="nav-link-icon"><i
+                            class="bi bi-gem"></i></span><span class="nav-link-text">Asteroids</span></a></li>
             <li><a href="#" class="nav-link" data-section="missions"><span class="nav-link-icon"><i
-                            class="bi bi-globe"></i></span><span class="nav-link-text">Space Missions</span></a></li>
-            <li><a href="#" class="nav-link" data-section="mars"><span class="nav-link-icon"><i
-                            class="bi bi-rocket-takeoff"></i></span><span class="nav-link-text">Mars Rovers</span></a>
+                            class="bi bi-rocket-takeoff"></i></span><span class="nav-link-text">Space Missions</span></a>
             </li>
         </ul>
     </nav>
@@ -173,6 +173,77 @@
             <div id="search-results" class="search-grid"></div>
         </section>
 
+        <!-- Near Earth Objects Section -->
+        <section id="neo" class="content-section">
+            <div class="section-header">
+                <h2>Near Earth Objects</h2>
+                <p class="section-description">Track asteroids passing close to Earth with real-time NASA data</p>
+            </div>
+            
+            <!-- NEO Controls -->
+            <div class="neo-controls">
+                <div class="neo-date-selector">
+                    <label for="neo-date"><i class="bi bi-calendar-event"></i> Select Date</label>
+                    <input type="date" id="neo-date" class="form-control neo-date-input">
+                </div>
+                <div class="neo-sort-selector">
+                    <label for="neo-sort"><i class="bi bi-filter"></i> Sort By</label>
+                    <select id="neo-sort" class="form-select">
+                        <option value="closest">Closest Distance</option>
+                        <option value="size">Largest Size</option>
+                        <option value="speed">Fastest Speed</option>
+                    </select>
+                </div>
+                <button id="neo-load-btn" class="btn btn-primary neo-load-btn">
+                    <i class="bi bi-search"></i> Find Asteroids
+                </button>
+            </div>
+
+            <!-- NEO Hero Section (shown before search) -->
+            <div id="neo-hero" class="neo-hero">
+                <div class="neo-hero-content">
+                    <div class="neo-hero-illustration">
+                        <div class="asteroid-main">
+                            <i class="bi bi-gem"></i>
+                        </div>
+                        <div class="asteroid-orbit"></div>
+                        <div class="asteroid-small asteroid-1"></div>
+                        <div class="asteroid-small asteroid-2"></div>
+                        <div class="asteroid-small asteroid-3"></div>
+                    </div>
+                    <h3>Discover Near Earth Objects</h3>
+                    <p>Select a date above to track asteroids passing close to Earth. View their size, speed, distance, and potential hazard level with real-time NASA data.</p>
+                    <div class="neo-hero-features">
+                        <div class="neo-hero-feature">
+                            <i class="bi bi-rulers"></i>
+                            <span>Track Size & Diameter</span>
+                        </div>
+                        <div class="neo-hero-feature">
+                            <i class="bi bi-speedometer2"></i>
+                            <span>Monitor Speed</span>
+                        </div>
+                        <div class="neo-hero-feature">
+                            <i class="bi bi-arrow-left-right"></i>
+                            <span>Check Distance</span>
+                        </div>
+                        <div class="neo-hero-feature">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <span>Hazard Detection</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="neo-loading" class="loading hidden">Scanning for space rocks...</div>
+            
+            <!-- NEO Stats Summary -->
+            <div id="neo-stats" class="neo-stats hidden"></div>
+            
+            <!-- NEO Results Grid -->
+            <div id="neo-results" class="neo-grid"></div>
+        </section>
+
         <!-- Space Missions Section -->
         <section id="missions" class="content-section">
             <div class="section-header">
@@ -181,29 +252,6 @@
             </div>
             <div id="missions-content" class="missions-container">
                 <!-- Mission cards will be populated here -->
-            </div>
-        </section>
-
-        <!-- Mars Rovers Section -->
-        <section id="mars" class="content-section">
-            <div class="section-header">
-                <h2>Mars Rover Photos</h2>
-            </div>
-            <!-- Coming Soon Message -->
-            <div id="mars-coming-soon" class="coming-soon-section">
-                <div class="coming-soon-content">
-                    <div class="coming-soon-icon">
-                        <i class="bi bi-rocket-takeoff-fill"></i>
-                    </div>
-                    <h3>Coming Soon!</h3>
-                    <p>Mars Rover Photos feature is currently under development</p>
-                    <div class="coming-soon-details">
-                        <span class="detail-badge"><i class="bi bi-camera-fill"></i> High-res Images</span>
-                        <span class="detail-badge"><i class="bi bi-calendar-check"></i> Date Selection</span>
-                        <span class="detail-badge"><i class="bi bi-grid-3x3"></i> Multiple Views</span>
-                    </div>
-                    <small class="coming-soon-note">Stay tuned for updates!</small>
-                </div>
             </div>
         </section>
     </main>
@@ -221,12 +269,16 @@
     <footer class="footer">
         <div class="footer-content">
             <p>Made with <i class="bi bi-heart-fill"></i> by Abdulqadir</p>
-            <p class="copyright">&copy; 2025 Space Explorer. All rights reserved.</p>
+            <p class="copyright">&copy; <span id="current-year"></span> Space Explorer. All rights reserved.</p>
         </div>
     </footer>
 
     <script src="js/api-client.js"></script>
     <script src="js/script.js"></script>
+    <script>
+        // Auto-update copyright year
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
 </body>
 
 </html>
