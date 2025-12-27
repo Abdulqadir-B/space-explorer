@@ -6,6 +6,9 @@
   "scripts": {
     "deploy": "vercel --prod"
   },
+  "dependencies": {
+    "@vercel/analytics": "^1.4.0"
+  },
   "keywords": ["nasa", "space", "astronomy"],
   "author": "Abdulqadir",
   "license": "MIT"
