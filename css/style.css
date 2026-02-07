@@ -2281,27 +2281,10 @@ main {
   font-size: 14px;
 }
 
-.footer-content .bi-heart-fill {
-  color: #ff6b6b;
-  animation: heartbeat 1.5s ease-in-out infinite;
-  font-size: 16px;
-  margin: 0 3px;
-}
-
 .footer-content .copyright {
   font-size: 13px;
   color: #888;
   margin-top: 5px;
-}
-
-@keyframes heartbeat {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-  }
 }
 
 /* Footer responsive adjustment when sidebar expands */
@@ -2413,5 +2396,89 @@ main {
 
   .neo-hero-feature span {
     font-size: 12px;
+  }
+}
+
+/* ===== FOOTER STYLES ===== */
+.footer {
+  background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+  border-top: 1px solid rgba(100, 181, 246, 0.2);
+  padding: 30px 20px;
+  text-align: center;
+  margin-left: 70px;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar.expanded ~ .main-content ~ .footer,
+.sidebar.expanded + .main-content + .footer {
+  margin-left: 280px;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-content p {
+  color: #90a4ae;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.footer-content p:last-child {
+  margin-bottom: 0;
+}
+
+.footer-content .bi-heart-fill {
+  color: #ef5350;
+  font-size: 0.85em;
+  display: inline-block;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.footer-content p:first-child:hover .bi-heart-fill {
+  transform: scale(1.15);
+  color: #ff6b6b;
+}
+
+.footer-content a {
+  color: #64b5f6;
+  text-decoration: none;
+  font-weight: 500;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.footer-content a::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #64b5f6, #90caf9);
+  transition: width 0.3s ease;
+}
+
+.footer-content a:hover {
+  color: #90caf9;
+  text-shadow: 0 0 10px rgba(100, 181, 246, 0.5);
+}
+
+.footer-content a:hover::after {
+  width: 100%;
+}
+
+.footer-content .copyright {
+  color: #607d8b;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+/* Mobile footer */
+@media (max-width: 768px) {
+  .footer {
+    margin-left: 0;
+    padding: 25px 15px;
   }
 }
